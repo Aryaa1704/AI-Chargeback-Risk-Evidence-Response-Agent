@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     gemini_timeout_seconds: int = 20
     gemini_max_retries: int = 1
     backend_cors_origins: str = "http://localhost:5173"
-    ml_model_artifact_path: str = "/workspaces/AI-Chargeback-Risk-Evidence-Response-Agent/backend/artifacts/models/chargeback-risk-v1.joblib"
+    ml_model_artifact_path: str = "artifacts/models/chargeback-risk-v1.joblib"
     risk_low_threshold: int = 35
     risk_high_threshold: int = 70
 

@@ -24,7 +24,7 @@ model_router = APIRouter(prefix="/model", tags=["model"])
 
 def _artifact_payload(settings: Settings, suffix: str) -> dict[str, Any]:
     import os
-    base = Path("/workspaces/AI-Chargeback-Risk-Evidence-Response-Agent/backend/artifacts/models/chargeback-risk-v1")
+    base = Path("artifacts/models/chargeback-risk-v1")
     path = Path(str(base) + suffix)
     try:
         return json.loads(path.read_text(encoding="utf-8"))

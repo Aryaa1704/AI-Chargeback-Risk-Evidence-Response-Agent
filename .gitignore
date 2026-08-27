@@ -1,0 +1,6 @@
+
+frontend/node_modules/
+backend/seed_risk*.py
+backend/check*.py
+backend/fix*.py
+backend/del*.py
