@@ -4,3 +4,11 @@ backend/seed_risk*.py
 backend/check*.py
 backend/fix*.py
 backend/del*.py
+
+.env
+
+.env
+
+.env
+*.env
+seed_risk2.py
