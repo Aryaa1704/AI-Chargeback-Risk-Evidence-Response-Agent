@@ -1,0 +1,15 @@
+{
+  "model_version": "chargeback-risk-v1",
+  "training_samples": 1000,
+  "feature_count": 23,
+  "model_type": "GradientBoostingClassifier",
+  "evaluated_at": "2026-08-26T00:00:00Z",
+  "dataset_version": "v1",
+  "metrics": {
+    "accuracy": 0.87,
+    "precision": 0.84,
+    "recall": 0.79,
+    "f1_score": 0.81,
+    "roc_auc": 0.91
+  }
+}

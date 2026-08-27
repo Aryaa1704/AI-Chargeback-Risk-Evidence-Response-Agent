@@ -1,0 +1,88 @@
+{
+  "model_version": "chargeback-risk-v1",
+  "training_date": "2026-08-26T07:23:17.137741+00:00",
+  "dataset_version": "synthetic_phase2_v2_22_features",
+  "dataset_fingerprint": "65f87f78ca2290a0be7047a8a88279afe72f4b8562d16a538c0e358e1eb973c6",
+  "feature_list": [
+    "amount",
+    "amount_deviation",
+    "transaction_velocity_24h",
+    "transaction_velocity_7d",
+    "customer_account_age_days",
+    "customer_dispute_count",
+    "customer_refund_count",
+    "customer_failed_tx_count",
+    "device_age_days",
+    "dispute_ratio",
+    "refund_ratio",
+    "has_device",
+    "is_new_device",
+    "currency",
+    "status",
+    "payment_method",
+    "merchant_category",
+    "customer_country",
+    "merchant_country",
+    "transaction_hour_bucket",
+    "transaction_day_of_week",
+    "location_match"
+  ],
+  "model_type": "random_forest",
+  "selection_criterion": "Highest validation recall; ties broken by validation F1 then ROC-AUC because chargeback misses are costlier.",
+  "validation_metrics": {
+    "logistic_regression": {
+      "precision": 0.8571428571428571,
+      "recall": 0.75,
+      "f1": 0.8,
+      "accuracy": 0.9444444444444444,
+      "roc_auc": 0.9701086956521738,
+      "confusion_matrix": [
+        [
+          45,
+          1
+        ],
+        [
+          2,
+          6
+        ]
+      ]
+    },
+    "random_forest": {
+      "precision": 0.8571428571428571,
+      "recall": 0.75,
+      "f1": 0.8,
+      "accuracy": 0.9444444444444444,
+      "roc_auc": 0.9945652173913043,
+      "confusion_matrix": [
+        [
+          45,
+          1
+        ],
+        [
+          2,
+          6
+        ]
+      ]
+    },
+    "xgboost": {
+      "precision": 0.8571428571428571,
+      "recall": 0.75,
+      "f1": 0.8,
+      "accuracy": 0.9444444444444444,
+      "roc_auc": 0.9429347826086957,
+      "confusion_matrix": [
+        [
+          45,
+          1
+        ],
+        [
+          2,
+          6
+        ]
+      ]
+    }
+  },
+  "split_policy": "Stratified 60/20/20 train/validation/test split using the recorded random seed.",
+  "held_out_test_policy": "Test split is created stratified and not used for model selection; Phase 4 evaluates the persisted selected artifact separately.",
+  "random_seed": 20260822
+}
