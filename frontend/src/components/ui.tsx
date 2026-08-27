@@ -1,0 +1,13 @@
+import { type ButtonHTMLAttributes, type ReactNode, useEffect, useId, useRef } from 'react';
+import type { RiskLevel } from '../types/api';
+
+export function Card({ title, children }: { title?: string; children: ReactNode }) { return <section className="card">{title && <h2>{title}</h2>}{children}</section>; }
+export function Button({ children, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) { return <button className="button" type="button" {...props}>{children}</button>; }
+export function RiskBadge({ level }: { level: RiskLevel | string }) { const normalized = ['LOW', 'MEDIUM', 'HIGH'].includes(level) ? level.toLowerCase() : 'unknown'; return <span className={`badge badge--${normalized}`}>{level}</span>; }
+export function CaseStatusChip({ status }: { status: string }) { return <span className="case-chip">{status.replace(/_/g, ' ')}</span>; }
+export function Alert({ kind = 'info', children }: { kind?: 'info' | 'error' | 'warning'; children: ReactNode }) { return <div className={`alert alert--${kind}`} role={kind === 'error' ? 'alert' : 'status'}>{children}</div>; }
+export function LoadingState({ label = 'Loading data…' }: { label?: string }) { return <div className="state" role="status"><span className="spinner" aria-hidden="true" />{label}</div>; }
+export function EmptyState({ title, detail }: { title: string; detail: string }) { return <div className="state"><strong>{title}</strong><span>{detail}</span></div>; }
+export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) { return <div className="state state--error" role="alert"><strong>Data unavailable</strong><span>{message}</span>{onRetry && <Button onClick={onRetry}>Try again</Button>}</div>; }
+export function Tabs({ tabs, active, onChange }: { tabs: { id: string; label: string }[]; active: string; onChange: (id: string) => void }) { return <div className="tabs" role="tablist">{tabs.map((tab) => <button className="tab" role="tab" aria-selected={active === tab.id} key={tab.id} onClick={() => onChange(tab.id)}>{tab.label}</button>)}</div>; }
+export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) { const titleId = useId(); const closeRef = useRef<HTMLButtonElement>(null); useEffect(() => { closeRef.current?.focus(); }, []); return <div className="modal-backdrop" role="presentation" onMouseDown={onClose}><section className="modal" role="dialog" aria-modal="true" aria-labelledby={titleId} onMouseDown={(event) => event.stopPropagation()}><header><h2 id={titleId}>{title}</h2><button className="button" ref={closeRef} type="button" aria-label="Close dialog" onClick={onClose}>Close</button></header>{children}</section></div>; }
