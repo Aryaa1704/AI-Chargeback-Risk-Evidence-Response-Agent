@@ -82,25 +82,20 @@ Secrets such as `GEMINI_API_KEY` must be supplied through environment variables 
 
 ## Fresh setup and run commands
 
-From a fresh clone:
+From a fresh clone:  git clone https://github.com/Aryaa1704/AI-Chargeback-Risk-Evidence-Response-Agent; cd AI-Chargeback-Risk-Evidence-Response-Agent; Copy-Item .env.example .env
 
 ```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e '.[dev]'
-python -m app.ml.train_model
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+cd backend; python -m venv .venv; .venv\Scripts\activate; pip install -e ".[dev]"; python -m app.ml.train_model; uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-In a second terminal:
+In a second terminal: SEED FIRST TIME
 
 ```bash
-cd frontend
-npm install
-npm run dev
+Invoke-WebRequest -Method POST -Uri "http://localhost:8000/api/v1/seed"
+NOW START FRONTEND IN SECOND TERMINAL     
+cd frontend; npm install; npm run dev
 ```
+
 live demo <https://ai-chargeback-risk-evidence-response.onrender.com/>
 Open <http://localhost:5173>. Backend health is available at <http://localhost:8000/api/v1/health> and OpenAPI docs are available at <http://localhost:8000/docs>.
 
