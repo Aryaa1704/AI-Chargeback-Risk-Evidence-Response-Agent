@@ -27,10 +27,10 @@
     "transaction_day_of_week",
     "location_match"
   ],
-  "artifact_path": "/workspaces/AI-Chargeback-Risk-Evidence-Response-Agent/backend/artifacts/models/chargeback-risk-v1.joblib",
-  "training_metadata_path": "/workspaces/AI-Chargeback-Risk-Evidence-Response-Agent/backend/artifacts/models/chargeback-risk-v1.metadata.json",
-  "evaluation_path": "/workspaces/AI-Chargeback-Risk-Evidence-Response-Agent/backend/artifacts/models/chargeback-risk-v1.evaluation.json",
-  "evaluation_report_path": "/workspaces/AI-Chargeback-Risk-Evidence-Response-Agent/backend/artifacts/models/chargeback-risk-v1.evaluation.md",
+  "artifact_path": "C:\\Users\\anshi\\AI-Chargeback-Risk-Evidence-Response-Agent\\backend\\artifacts\\models\\chargeback-risk-v1.joblib",
+  "training_metadata_path": "C:\\Users\\anshi\\AI-Chargeback-Risk-Evidence-Response-Agent\\backend\\artifacts\\models\\chargeback-risk-v1.metadata.json",
+  "evaluation_path": "C:\\Users\\anshi\\AI-Chargeback-Risk-Evidence-Response-Agent\\backend\\artifacts\\models\\chargeback-risk-v1.evaluation.json",
+  "evaluation_report_path": "C:\\Users\\anshi\\AI-Chargeback-Risk-Evidence-Response-Agent\\backend\\artifacts\\models\\chargeback-risk-v1.evaluation.md",
   "metrics": {
     "threshold": 0.5,
     "precision": 1.0,

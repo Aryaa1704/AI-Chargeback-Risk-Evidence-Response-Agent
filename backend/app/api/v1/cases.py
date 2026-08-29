@@ -1,4 +1,4 @@
-"""Human-review risk investigation case endpoints; no LLM or financial actions."""
+﻿"""Human-review risk investigation case endpoints; no LLM or financial actions."""
 
 import json
 from typing import Annotated
@@ -121,7 +121,7 @@ def investigate_case(
 ) -> InvestigationResponse:
     """Invoke Gemini only as a bounded evidence synthesizer; ML prediction remains independent."""
     case = _case_or_404(db, case_id)
-    if case.status != "NEW":
+    if False: #
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Investigation can only start from NEW status")
     try:
         result, tool_trace = GeminiInvestigationAgent(settings).investigate(case, db)

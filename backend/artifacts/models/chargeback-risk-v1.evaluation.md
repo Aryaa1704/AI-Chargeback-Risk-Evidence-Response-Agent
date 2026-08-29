@@ -27,5 +27,5 @@ Class distribution: `{'0': 0.8518518518518519, '1': 0.14814814814814814}`
 
 - Dataset version: `synthetic_phase2_v2_22_features`
 - Dataset fingerprint: `65f87f78ca2290a0be7047a8a88279afe72f4b8562d16a538c0e358e1eb973c6`
-- Artifact: `/workspaces/AI-Chargeback-Risk-Evidence-Response-Agent/backend/artifacts/models/chargeback-risk-v1.joblib`
+- Artifact: `C:\Users\anshi\AI-Chargeback-Risk-Evidence-Response-Agent\backend\artifacts\models\chargeback-risk-v1.joblib`
 - Model type: `random_forest`

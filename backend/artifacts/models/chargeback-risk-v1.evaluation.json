@@ -1,15 +1,64 @@
 {
   "model_version": "chargeback-risk-v1",
-  "training_samples": 1000,
-  "feature_count": 23,
-  "model_type": "GradientBoostingClassifier",
-  "evaluated_at": "2026-08-26T00:00:00Z",
-  "dataset_version": "v1",
+  "model_type": "random_forest",
+  "evaluated_at": "2026-08-29T11:38:27.853294+00:00",
+  "dataset_version": "synthetic_phase2_v2_22_features",
+  "dataset_fingerprint": "65f87f78ca2290a0be7047a8a88279afe72f4b8562d16a538c0e358e1eb973c6",
+  "split": {
+    "strategy": "stratified",
+    "random_seed": 20260822,
+    "held_out_test_fraction": 0.2,
+    "row_count": 54
+  },
+  "artifact_path": "C:\\Users\\anshi\\AI-Chargeback-Risk-Evidence-Response-Agent\\backend\\artifacts\\models\\chargeback-risk-v1.joblib",
+  "feature_schema": [
+    "amount",
+    "amount_deviation",
+    "transaction_velocity_24h",
+    "transaction_velocity_7d",
+    "customer_account_age_days",
+    "customer_dispute_count",
+    "customer_refund_count",
+    "customer_failed_tx_count",
+    "device_age_days",
+    "dispute_ratio",
+    "refund_ratio",
+    "has_device",
+    "is_new_device",
+    "currency",
+    "status",
+    "payment_method",
+    "merchant_category",
+    "customer_country",
+    "merchant_country",
+    "transaction_hour_bucket",
+    "transaction_day_of_week",
+    "location_match"
+  ],
   "metrics": {
-    "accuracy": 0.87,
-    "precision": 0.84,
-    "recall": 0.79,
-    "f1_score": 0.81,
-    "roc_auc": 0.91
+    "threshold": 0.5,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "accuracy": 1.0,
+    "roc_auc": 1.0,
+    "confusion_matrix": [
+      [
+        46,
+        0
+      ],
+      [
+        0,
+        8
+      ]
+    ],
+    "support_counts": {
+      "0": 46,
+      "1": 8
+    },
+    "class_distribution": {
+      "0": 0.8518518518518519,
+      "1": 0.14814814814814814
+    }
   }
 }
