@@ -85,11 +85,11 @@ Secrets such as `GEMINI_API_KEY` must be supplied through environment variables 
 From a fresh clone:
 ```bash
 git clone https://github.com/Aryaa1704/AI-Chargeback-Risk-Evidence-Response-Agent; cd AI-Chargeback-Risk-Evidence-Response-Agent; Copy-Item .env.example .env
-
-```bash
+```
+TERMINAL 1
+```BASH
 cd backend; python -m venv .venv; .venv\Scripts\activate; pip install -e ".[dev]"; python -m app.ml.train_model; uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-
 In a second terminal: SEED FIRST TIME
 
 ```bash
