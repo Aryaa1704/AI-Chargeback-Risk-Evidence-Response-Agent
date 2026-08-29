@@ -82,7 +82,9 @@ Secrets such as `GEMINI_API_KEY` must be supplied through environment variables 
 
 ## Fresh setup and run commands
 
-From a fresh clone: { git clone https://github.com/Aryaa1704/AI-Chargeback-Risk-Evidence-Response-Agent; cd AI-Chargeback-Risk-Evidence-Response-Agent; Copy-Item .env.example .env }
+From a fresh clone:
+```bash
+git clone https://github.com/Aryaa1704/AI-Chargeback-Risk-Evidence-Response-Agent; cd AI-Chargeback-Risk-Evidence-Response-Agent; Copy-Item .env.example .env
 
 ```bash
 cd backend; python -m venv .venv; .venv\Scripts\activate; pip install -e ".[dev]"; python -m app.ml.train_model; uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -92,7 +94,9 @@ In a second terminal: SEED FIRST TIME
 
 ```bash
 Invoke-WebRequest -Method POST -Uri "http://localhost:8000/api/v1/seed"
+```
 NOW START FRONTEND IN SECOND TERMINAL     
+```bash
 cd frontend; npm install; npm run dev
 ```
 
