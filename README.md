@@ -167,3 +167,4 @@ npm run build
 - No authentication yet.
 - Gemini investigations require a backend-only `GEMINI_API_KEY`; ML prediction remains available when Gemini is unavailable.
 - Screenshots should be captured from a running evaluator environment; no fabricated screenshots are included.
+<img width="2836" height="1454" alt="image" src="https://github.com/user-attachments/assets/82a78e9c-2873-462e-aad4-66af7c126b94" />
