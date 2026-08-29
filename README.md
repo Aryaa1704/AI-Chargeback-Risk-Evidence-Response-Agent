@@ -20,7 +20,8 @@ The application combines a backend ML chargeback-risk model with a backend-only 
 
 ## Screenshots
 
-Actual screenshots are intentionally not committed unless captured from a running local environment. To generate evaluator screenshots from a fresh clone, start the backend and frontend with the commands below, seed/train as needed, then capture:
+<img width="2836" height="1454" alt="image" src="https://github.com/user-attachments/assets/82a78e9c-2873-462e-aad4-66af7c126b94" />
+
 
 1. Dashboard with the `TX-DEMO-001` hero card.
 2. Transaction queue filtered to `TX-DEMO-001`.
@@ -167,4 +168,3 @@ npm run build
 - No authentication yet.
 - Gemini investigations require a backend-only `GEMINI_API_KEY`; ML prediction remains available when Gemini is unavailable.
 - Screenshots should be captured from a running evaluator environment; no fabricated screenshots are included.
-<img width="2836" height="1454" alt="image" src="https://github.com/user-attachments/assets/82a78e9c-2873-462e-aad4-66af7c126b94" />
