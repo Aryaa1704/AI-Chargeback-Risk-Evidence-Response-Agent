@@ -7,23 +7,20 @@
     },
     "backend": {
       "root": "backend/",
-      "entrypoint": "main:app",
-      "framework": "fastapi"
+      "entrypoint": "app.main:app"
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": {
-        "service": "backend",
-        "path": "/api/$1"
+        "service": "backend"
       }
     },
     {
       "source": "/(.*)",
       "destination": {
-        "service": "frontend",
-        "path": "/$1"
+        "service": "frontend"
       }
     }
   ]
