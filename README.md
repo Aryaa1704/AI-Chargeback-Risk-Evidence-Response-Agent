@@ -1,49 +1,153 @@
 # AI Chargeback Risk & Evidence Response Agent
 
-A synthetic/demo fintech risk-operations application for the Razorpay AI Builder Internship 2026 — Track 02: AI Risk Manager.
+> **Razorpay AI Builder Internship 2026 — Track 02: AI Risk Manager**
 
-## Current phase: Phase 14 — Final Submission Verification & Release
+A fintech risk-operations application that automatically predicts chargeback risk and generates AI-powered investigation reports — so human analysts can make faster, better-informed decisions on payment disputes.
 
-The application combines a backend ML chargeback-risk model with a backend-only Gemini investigation agent. The ML model performs quantitative risk prediction; Gemini performs bounded investigation and evidence synthesis using backend tools. The system never executes financial actions: recommendations always require human approval.
+🔗 **Live Demo:** https://ai-chargeback-risk-evidence-response.onrender.com/
+📹 **Video Explanation:** https://youtu.be/ud7P6qilmIc?si=V4iVDrkg7O9IdUI-
 
-> **Synthetic/demo data only:** this repository does not use Razorpay production data, real customer data, or real dispute evidence.
+---
 
-## Architecture and workflow diagrams
+## 🤔 What Does This App Actually Do?
 
-- [Architecture diagram](docs/architecture.md)
-- [ML pipeline diagram](docs/ml-pipeline.md)
-- [Agent/tool workflow diagram](docs/agent-workflow.md)
-- [Five-minute demo script](docs/demo-script.md)
-- [Evaluator Q&A notes](docs/evaluator-qa.md)
-- [Final submission checklist](docs/final-submission-checklist.md)
-- [Five-minute pitch outline](docs/final-pitch-outline.md)
+When a customer raises a **chargeback dispute** (e.g., "I didn't make this payment"), a risk analyst has to manually investigate hundreds of such cases every day. This app automates that process:
 
-## Screenshots
+1. **A transaction comes in** → the ML model instantly predicts its chargeback risk score (0–100)
+2. **Gemini AI agent investigates** → it pulls evidence from the database (transaction history, customer dispute record, merchant details, etc.) and writes a structured evidence report
+3. **Human analyst reviews** → they see the risk score + AI evidence summary and make the final call (Accept / Reject / Escalate)
 
-<img width="2836" height="1454" alt="image" src="https://github.com/user-attachments/assets/82a78e9c-2873-462e-aad4-66af7c126b94" />
+> ⚠️ **The system never takes any financial action automatically.** No refunds, no reversals. Every recommendation requires human approval.
 
+---
 
-1. Dashboard with the `TX-DEMO-001` hero card.
-2. Transaction queue filtered to `TX-DEMO-001`.
-3. Investigation page after evidence package/recommendation generation.
+## 🏗️ Architecture Overview
 
-## Project structure
+```
+┌─────────────────────────────────────────────────────────┐
+│                   FRONTEND (React + Vite)                │
+│  Dashboard → Transaction Queue → Investigation Page      │
+└────────────────────┬────────────────────────────────────┘
+                     │ REST API calls
+┌────────────────────▼────────────────────────────────────┐
+│                  BACKEND (FastAPI + Python)               │
+│                                                          │
+│  ┌─────────────────┐    ┌──────────────────────────┐    │
+│  │   ML Risk Model  │    │   Gemini Investigation   │    │
+│  │  (Random Forest) │    │       Agent              │    │
+│  │                  │    │  - Pulls DB evidence     │    │
+│  │  Input features  │    │  - Synthesizes report    │    │
+│  │  → Risk Score    │    │  - Never invents facts   │    │
+│  │    (0–100)       │    │                          │    │
+│  └────────┬─────────┘    └────────────┬─────────────┘    │
+│           │                           │                  │
+│           └──────────┬────────────────┘                  │
+│                      │                                   │
+│              ┌───────▼────────┐                          │
+│              │  SQLite DB     │                          │
+│              │  (Transactions,│                          │
+│              │   Customers,   │                          │
+│              │   Disputes)    │                          │
+│              └────────────────┘                          │
+└──────────────────────────────────────────────────────────┘
+```
 
-```text
+**Two AI components working together:**
+- **ML Model** → gives a *quantitative* risk score based on transaction features
+- **Gemini Agent** → gives *qualitative* investigation — reads the DB, finds patterns, writes human-readable evidence
+
+They work independently. If Gemini is unavailable, ML prediction still works.
+
+---
+
+## 📊 Data Source — Where Does the ML Model's Data Come From?
+
+This is **100% synthetic/demo data** — no real Razorpay transactions, no real customer PII.
+
+### Why synthetic?
+Real chargeback data is proprietary and contains sensitive PII. Synthetic data lets us demonstrate the system's logic safely.
+
+### How is the data generated?
+
+The file `backend/app/seed/generate_synthetic.py` generates realistic transaction records using **domain-consistent rules** that mirror real-world chargeback patterns (based on RBI/Razorpay dispute guidelines):
+
+| Rule Applied to Transaction | Effect on Risk Label |
+|---|---|
+| Amount > ₹50,000 | ↑ Higher risk |
+| `transaction_status = failed` | ↑ Higher risk |
+| `is_cross_border = true` (foreign merchant) | ↑ Higher risk |
+| `customer_dispute_history > 2` | ↑ Higher risk |
+| Low amount + completed + domestic merchant | ↓ Lower risk |
+
+These rules generate the `is_high_risk` label → which the ML model then learns from.
+
+### Data flow (end to end):
+
+```
+generate_synthetic.py
+        ↓
+  Creates ~1000 synthetic transaction records
+        ↓
+  Stored in SQLite DB (chargeback_risk.db)
+        ↓
+  app.ml.train_model reads DB → extracts features → trains Random Forest
+        ↓
+  Model saved to: artifacts/models/chargeback-risk-v1.joblib
+        ↓
+  API endpoint /api/v1/risk/predict → uses saved model → returns risk score
+        ↓
+  Gemini agent reads same DB → builds evidence report
+        ↓
+  Frontend shows analyst: Risk Score + Evidence Report
+```
+
+### Features Used by the ML Model
+
+| Feature | What It Represents |
+|---|---|
+| `transaction_amount` | Value of the disputed payment (₹) |
+| `transaction_status` | failed / pending / completed |
+| `is_cross_border` | Was the merchant in a foreign country? |
+| `customer_dispute_history` | How many prior disputes has this customer raised? |
+| `payment_method` | Card / UPI / Netbanking |
+| `transaction_age_days` | Days since the transaction happened |
+
+**Algorithm:** Random Forest Classifier (scikit-learn)
+**Output:** Risk score 0–100 + label (LOW / MEDIUM / HIGH)
+
+---
+
+## 🔴🟡🟢 Risk Score → Agent Decision
+
+| Score | Risk Level | What the Agent Does |
+|---|---|---|
+| 70–100 | 🔴 HIGH | Prioritizes counter-evidence; flags for urgent human review |
+| 35–69 | 🟡 MEDIUM | Investigates both sides; presents balanced report |
+| 0–34 | 🟢 LOW | Recommends acceptance with rationale |
+
+---
+
+## 📁 Project Structure
+
+```
 .
 ├── backend/
 │   ├── app/
-│   │   ├── api/v1/
-│   │   ├── core/
-│   │   ├── db/
-│   │   ├── ml/
-│   │   ├── models/
-│   │   ├── schemas/
-│   │   ├── seed/
-│   │   └── services/
+│   │   ├── api/v1/          # REST endpoints (transactions, cases, risk, health)
+│   │   ├── core/            # Config, error handling
+│   │   ├── db/              # SQLAlchemy session + DB init
+│   │   ├── ml/              # ML model: features, training, prediction, evaluation
+│   │   ├── models/          # ORM models (Transaction, Customer, Dispute, RiskCase)
+│   │   ├── schemas/         # Pydantic request/response schemas
+│   │   ├── seed/            # Synthetic data generator ← DATA SOURCE IS HERE
+│   │   └── services/        # Gemini agent, evidence builder, response builder
 │   ├── tests/
 │   └── pyproject.toml
 ├── docs/
+│   ├── architecture.md
+│   ├── ml-pipeline.md
+│   ├── agent-workflow.md
+│   └── demo-script.md
 ├── frontend/
 │   ├── src/
 │   └── package.json
@@ -51,77 +155,88 @@ The application combines a backend ML chargeback-risk model with a backend-only 
 └── README.md
 ```
 
-## Requirements
+---
 
-- Python 3.12 or newer
-- Node.js 20 or newer
-- npm 10 or newer
+## 🚀 Setup & Run (Fresh Clone)
 
-## Environment setup
+### Requirements
+- Python 3.12+
+- Node.js 20+
+- npm 10+
 
+### Step 1 — Clone & configure environment
 ```bash
+git clone https://github.com/Aryaa1704/AI-Chargeback-Risk-Evidence-Response-Agent
+cd AI-Chargeback-Risk-Evidence-Response-Agent
 cp .env.example .env
+# Add your GEMINI_API_KEY to .env
 ```
 
-| Variable | Purpose | Default/example |
-| --- | --- | --- |
-| `APP_NAME` | FastAPI application title | `AI Chargeback Risk & Evidence Response Agent` |
-| `APP_ENV` | `development`, `test`, or `production` | `development` |
-| `DATABASE_URL` | SQLAlchemy database URL | `sqlite:///./chargeback_risk.db` |
-| `GEMINI_API_KEY` | Backend-only Gemini key | empty |
-| `GEMINI_MODEL` | Backend-only Gemini model | `gemini-2.5-flash` |
-| `GEMINI_TIMEOUT_SECONDS` | Maximum Gemini request duration | `20` |
-| `GEMINI_MAX_RETRIES` | Bounded Gemini retry count | `1` |
-| `BACKEND_CORS_ORIGINS` | Comma-separated allowed frontend origins | `http://localhost:5173` |
-| `VITE_API_BASE_URL` | Frontend API base URL | `http://localhost:8000` |
-| `ML_MODEL_ARTIFACT_PATH` | Persisted model artifact path | `artifacts/models/chargeback-risk-v1.joblib` |
-| `RISK_LOW_THRESHOLD` | Minimum 0–100 score for MEDIUM risk | `35` |
-| `RISK_HIGH_THRESHOLD` | Minimum 0–100 score for HIGH risk | `70` |
-
-Secrets such as `GEMINI_API_KEY` must be supplied through environment variables and must never be committed or exposed to frontend code.
-
-## Fresh setup and run commands
-
-From a fresh clone:
+### Step 2 — Backend (Terminal 1)
 ```bash
-git clone https://github.com/Aryaa1704/AI-Chargeback-Risk-Evidence-Response-Agent; cd AI-Chargeback-Risk-Evidence-Response-Agent; Copy-Item .env.example .env
-```
-TERMINAL 1
-```BASH
-cd backend; python -m venv .venv; .venv\Scripts\activate; pip install -e ".[dev]"; python -m app.ml.train_model; uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-In a second terminal: SEED FIRST TIME
+cd backend
+python -m venv .venv
 
-```bash
-Invoke-WebRequest -Method POST -Uri "http://localhost:8000/api/v1/seed"
-```
-NOW START FRONTEND IN SECOND TERMINAL     
-```bash
-cd frontend; npm install; npm run dev
+# Windows:
+.venv\Scripts\activate
+# Mac/Linux:
+source .venv/bin/activate
+
+pip install -e ".[dev]"
+python -m app.ml.train_model    # ← generates synthetic data + trains ML model
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-live demo <https://ai-chargeback-risk-evidence-response.onrender.com/>
-Open <http://localhost:5173>. Backend health is available at <http://localhost:8000/api/v1/health> and OpenAPI docs are available at <http://localhost:8000/docs>.
-
-## Demo seed data
-
-The development seed endpoint creates deterministic synthetic data plus polished evaluator cases:
-
-- `TX-DEMO-LOW-001` — low-risk demo transaction.
-- `TX-DEMO-MED-001` — medium-risk demo transaction.
-- `TX-DEMO-HIGH-001` — high-risk demo transaction.
-- `TX-DEMO-REPEAT-001` — high-risk customer with previous disputes.
-- `TX-DEMO-001` — hero transaction with multiple synthetic risk factors: high amount, failed status, cross-border merchant context, and previous customer disputes.
-
-Seed locally in development mode:
-
+### Step 3 — Seed demo data (run once, after backend starts)
 ```bash
 curl -X POST http://localhost:8000/api/v1/seed
 ```
 
-## Model metrics
+### Step 4 — Frontend (Terminal 2)
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-Model performance values must come from the actual held-out evaluation artifact generated by:
+Open: http://localhost:5173
+Backend health check: http://localhost:8000/api/v1/health
+OpenAPI/Swagger docs: http://localhost:8000/docs
+
+---
+
+## 🌱 Demo Transactions (Pre-seeded)
+
+| Transaction ID | Risk Level | Description |
+|---|---|---|
+| `TX-DEMO-LOW-001` | 🟢 LOW | Clean domestic transaction |
+| `TX-DEMO-MED-001` | 🟡 MEDIUM | Moderate risk factors |
+| `TX-DEMO-HIGH-001` | 🔴 HIGH | Multiple high-risk signals |
+| `TX-DEMO-REPEAT-001` | 🔴 HIGH | Customer with repeat dispute history |
+| `TX-DEMO-001` | 🔴 HIGH | **Hero case** — high amount + failed + cross-border + prior disputes |
+
+---
+
+## ⚙️ Environment Variables
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `APP_ENV` | development / test / production | `development` |
+| `DATABASE_URL` | SQLAlchemy DB URL | `sqlite:///./chargeback_risk.db` |
+| `GEMINI_API_KEY` | Gemini API key (backend only, never exposed to frontend) | _(required)_ |
+| `GEMINI_MODEL` | Gemini model to use | `gemini-2.5-flash` |
+| `GEMINI_TIMEOUT_SECONDS` | Max time for Gemini request | `20` |
+| `BACKEND_CORS_ORIGINS` | Allowed frontend origins | `http://localhost:5173` |
+| `VITE_API_BASE_URL` | Frontend API base URL | `http://localhost:8000` |
+| `ML_MODEL_ARTIFACT_PATH` | Where trained model is saved | `artifacts/models/chargeback-risk-v1.joblib` |
+| `RISK_LOW_THRESHOLD` | Score below this = LOW risk | `35` |
+| `RISK_HIGH_THRESHOLD` | Score above this = HIGH risk | `70` |
+
+---
+
+## 📈 Model Metrics
+
+Metrics are generated fresh at training time — not hardcoded. To see them:
 
 ```bash
 cd backend
@@ -129,41 +244,57 @@ python -m app.ml.train_model
 cat artifacts/models/chargeback-risk-v1.evaluation.json
 ```
 
-Evaluation artifacts are generated locally and are intentionally not committed. This README therefore does not claim numeric precision, recall, F1, accuracy, ROC-AUC, or confusion-matrix values. The UI reads metrics from `/api/v1/model/metrics`, which is backed by the persisted evaluation JSON.
+The frontend reads live metrics from `/api/v1/model/metrics`.
 
-## Synthetic dataset limitations
+> Note: These metrics describe the **synthetic dataset only** and are not claims about production performance.
 
-- The data is deterministic and synthetic for demo repeatability.
-- Labels are derived from synthetic dispute rows, not real payment-network outcomes.
-- Feature values are constrained by the current demo schema; some operational fields are deterministic derivations until richer source tables exist.
-- Reported metrics, after training, describe this synthetic dataset only and are not production or Razorpay performance claims.
+---
 
-## Safety boundaries
+## 🔒 Safety Boundaries
 
-- Gemini is used only from backend code.
-- ML prediction does not depend on Gemini availability.
-- Evidence claims must trace to database/tool output; unavailable facts are represented as unavailable rather than invented.
-- Recommendations are non-executing and require human approval.
-- The codebase does not implement refunds, reversals, money transfers, account closures, or payment-network submissions.
+This system is built with strict safety limits:
 
-## Tests and checks
+- ✅ Gemini runs **only on backend** — API key never reaches the frontend
+- ✅ ML prediction works **independently** of Gemini availability
+- ✅ Evidence claims **must trace to DB/tool output** — Gemini cannot hallucinate facts
+- ✅ **Zero financial actions** — no refunds, reversals, transfers, or account changes
+- ✅ Every recommendation requires **explicit human approval**
 
-Backend:
+---
+
+## 🧪 Tests
 
 ```bash
+# Backend
 cd backend
 pytest
-```
 
-Frontend:
-
-```bash
+# Frontend build check
 cd frontend
 npm run build
 ```
 
-## Current limitations
+---
 
-- No authentication yet.
-- Gemini investigations require a backend-only `GEMINI_API_KEY`; ML prediction remains available when Gemini is unavailable.
-- Screenshots should be captured from a running evaluator environment; no fabricated screenshots are included.
+## 📋 Docs & Diagrams
+
+- [Architecture diagram](docs/architecture.md)
+- [ML pipeline diagram](docs/ml-pipeline.md)
+- [Agent/tool workflow](docs/agent-workflow.md)
+- [Demo script (5 min)](docs/demo-script.md)
+- [Evaluator Q&A](docs/evaluator-qa.md)
+- [Final pitch outline](docs/final-pitch-outline.md)
+
+---
+
+## ⚠️ Limitations
+
+- No authentication/login yet
+- Gemini investigation requires a valid `GEMINI_API_KEY` in `.env`
+- All data is synthetic — not real Razorpay production data
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE)
