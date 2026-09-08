@@ -11,6 +11,10 @@ A fintech risk-operations application that automatically predicts chargeback ris
 
 ## 🤔 What Does This App Actually Do?
 
+Input: Disputed transaction + customer + merchant + dispute context
+Processing: ML risk scoring + database-backed AI investigation
+Output: Risk score + evidence-backed investigation report + recommended action for human review
+
 When a customer raises a **chargeback dispute** (e.g., "I didn't make this payment"), a risk analyst has to manually investigate hundreds of such cases every day. This app automates that process:
 
 1. **A transaction comes in** → the ML model instantly predicts its chargeback risk score (0–100)
@@ -69,7 +73,8 @@ Real chargeback data is proprietary and contains sensitive PII. Synthetic data l
 
 ### How is the data generated?
 
-The file `backend/app/seed/generate_synthetic.py` generates realistic transaction records using **domain-consistent rules** that mirror real-world chargeback patterns (based on RBI/Razorpay dispute guidelines):
+The file `backend/app/seed/generate_synthetic.py` generates realistic transaction records using **domain-consistent rules** that mirror real-world chargeback patterns
+
 
 | Rule Applied to Transaction | Effect on Risk Label |
 |---|---|
@@ -82,6 +87,134 @@ The file `backend/app/seed/generate_synthetic.py` generates realistic transactio
 These rules generate the `is_high_risk` label → which the ML model then learns from.
 
 ### Data flow (end to end):
+
+### 🧠 ML Training Pipeline
+
+The ML pipeline is trained entirely on deterministic synthetic transaction and dispute data.
+
+#### 1. Synthetic Data Generation
+
+The training pipeline first creates a deterministic synthetic dataset using
+`backend/app/seed/generate_synthetic.py`.
+
+The seed generates synthetic customers, merchants, devices, transactions,
+and dispute records and stores them in the database.
+
+No real Razorpay transaction data or customer PII is used.
+
+#### 2. Target / Chargeback Label
+
+For each transaction, the training pipeline checks whether a corresponding
+dispute record exists.
+
+- `has_chargeback = 1` → transaction has a corresponding dispute
+- `has_chargeback = 0` → transaction has no corresponding dispute
+
+This target is generated from the synthetic dispute records and is used as
+the supervised learning label.
+
+#### 3. Feature Extraction
+
+`backend/app/ml/features.py` converts database records into a model-ready
+training dataframe.
+
+The model uses 22 features covering:
+
+- Transaction amount and amount deviation
+- Transaction velocity over 24 hours and 7 days
+- Customer account age
+- Customer dispute/refund/failed-transaction history
+- Device age and new-device indicator
+- Currency and transaction status
+- Payment method
+- Merchant category
+- Customer and merchant country
+- Transaction time/day buckets
+- Customer/merchant location match
+
+Categorical features are one-hot encoded and numerical features are
+standardized inside the ML preprocessing pipeline.
+
+#### 4. Train / Validation / Test Split
+
+The dataset is split using a stratified:
+
+- 60% training set
+- 20% validation set
+- 20% held-out test set
+
+A fixed random seed is used to make the training process reproducible.
+
+The test set remains untouched during model selection.
+
+#### 5. Model Training
+
+Three candidate classifiers are trained:
+
+1. Logistic Regression
+2. Random Forest
+3. XGBoost
+
+Each model is combined with the same preprocessing pipeline.
+
+The models are evaluated on the validation set using:
+
+- Precision
+- Recall
+- F1 Score
+- Accuracy
+- ROC-AUC
+- Confusion Matrix
+
+Because missing a genuine chargeback is considered costly, model selection
+prioritizes the highest validation recall, followed by F1 and ROC-AUC.
+
+#### 6. Model Persistence
+
+After validation, the selected model and its preprocessing pipeline are
+persisted as a `.joblib` artifact.
+
+The pipeline also stores metadata including:
+
+- Model version
+- Dataset version
+- Dataset fingerprint
+- Feature list
+- Validation metrics
+- Split policy
+- Random seed
+
+This allows the exact training configuration to be tracked and reproduced.
+
+#### 7. Held-Out Evaluation
+
+The selected persisted model is evaluated separately on the untouched
+test set.
+
+The resulting metrics and evaluation reports are saved as artifacts and
+exposed through the backend model-metrics endpoint.
+
+> **Important:** The dataset is synthetic and deterministic. Therefore,
+> model metrics demonstrate the correctness of the ML pipeline and feature
+> engineering rather than production-level chargeback prediction
+> performance.
+
+#### 8. API Inference
+
+During application runtime, the `/api/v1/risk/predict` endpoint receives the
+model-ready transaction features.
+
+The backend:
+
+1. Loads the persisted `.joblib` pipeline.
+2. Applies the same preprocessing used during training.
+3. Generates a chargeback probability.
+4. Converts the probability into a 0–100 risk score.
+5. Maps the score to LOW / MEDIUM / HIGH.
+6. Returns model-derived risk factors for analyst review.
+
+Gemini is not required for ML prediction, so risk scoring remains available
+even if the AI investigation service is unavailable.
 
 ```
 generate_synthetic.py
@@ -111,6 +244,22 @@ generate_synthetic.py
 | `customer_dispute_history` | How many prior disputes has this customer raised? |
 | `payment_method` | Card / UPI / Netbanking |
 | `transaction_age_days` | Days since the transaction happened |
+
+### Features Used by the ML Model
+
+The model uses 22 engineered features:
+
+| Category | Features |
+|---|---|
+| Transaction | amount, amount_deviation, status, currency |
+| Velocity | transaction_velocity_24h, transaction_velocity_7d |
+| Customer History | customer_account_age_days, customer_dispute_count, customer_refund_count, customer_failed_tx_count |
+| Device | device_age_days, has_device, is_new_device |
+| Ratios | dispute_ratio, refund_ratio |
+| Merchant | merchant_category, merchant_country |
+| Customer | customer_country, location_match |
+| Time | transaction_hour_bucket, transaction_day_of_week |
+| Payment | payment_method |
 
 **Algorithm:** Random Forest Classifier (scikit-learn)
 **Output:** Risk score 0–100 + label (LOW / MEDIUM / HIGH)
