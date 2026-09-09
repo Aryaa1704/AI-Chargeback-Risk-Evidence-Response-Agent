@@ -1,27 +1,40 @@
 # AI Chargeback Risk & Evidence Response Agent
-
-> **Razorpay AI Builder Internship 2026 — Track 02: AI Risk Manager**
-
-A fintech risk-operations application that automatically predicts chargeback risk and generates AI-powered investigation reports — so human analysts can make faster, better-informed decisions on payment disputes.
+> Razorpay AI Builder Internship 2026 — Track 02: AI Risk Manager
 
 🔗 **Live Demo:** https://ai-chargeback-risk-evidence-response.onrender.com/
-📹 **Video Explanation:** https://youtu.be/ud7P6qilmIc?si=V4iVDrkg7O9IdUI-
+📹 **Demo Video:** https://youtu.be/ud7P6qilmIc
 
 ---
 
-## 🤔 What Does This App Actually Do?
+## The Problem
+A risk analyst at a payment company manually investigates hundreds of 
+chargeback disputes every day — "I didn't make this payment." Each case 
+requires pulling transaction history, checking customer behavior, 
+and writing a decision. It's slow, inconsistent, and doesn't scale.
 
-Input: Disputed transaction + customer + merchant + dispute context
-Processing: ML risk scoring + database-backed AI investigation
-Output: Risk score + evidence-backed investigation report + recommended action for human review
+## What This App Does
+This app automates the *investigation* step — not the decision.
 
-When a customer raises a **chargeback dispute** (e.g., "I didn't make this payment"), a risk analyst has to manually investigate hundreds of such cases every day. This app automates that process:
+1. **Analyst submits** a disputed transaction ID
+2. **ML model scores** chargeback risk 0–100 using 22 transaction features
+3. **Gemini AI agent investigates** — queries the database for evidence 
+   (transaction history, customer dispute record, merchant profile) 
+   and writes a structured investigation report
+4. **Human analyst reviews** the score + report → Accept / Reject / Escalate
 
-1. **A transaction comes in** → the ML model instantly predicts its chargeback risk score (0–100)
-2. **Gemini AI agent investigates** → it pulls evidence from the database (transaction history, customer dispute record, merchant details, etc.) and writes a structured evidence report
-3. **Human analyst reviews** → they see the risk score + AI evidence summary and make the final call (Accept / Reject / Escalate)
+> ⚠️ Zero financial actions are taken automatically. Every recommendation 
+> requires human approval.
 
-> ⚠️ **The system never takes any financial action automatically.** No refunds, no reversals. Every recommendation requires human approval.
+## Where Does the Data Come From?
+**All data is synthetic** — generated deterministically by 
+`backend/app/seed/generate_synthetic.py`.
+
+The seed script creates realistic customers, merchants, devices, 
+transactions, and dispute records stored in SQLite. No real Razorpay 
+data or customer PII is used anywhere.
+
+The ML model is trained on this synthetic data to demonstrate correct 
+pipeline and feature engineering — not production-level accuracy.
 
 ---
 
