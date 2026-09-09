@@ -54,7 +54,7 @@ When a customer raises a **chargeback dispute** (e.g., "I didn't make this payme
 **Two AI components working together:**
 - **ML Model** → gives a *quantitative* risk score based on transaction features
 - **Gemini Agent** → gives *qualitative* investigation — reads the DB, finds patterns, writes human-readable evidence
-
+Gemini does not make the final risk decision; it investigates evidence and provides a recommendation for human review.
 They work independently. If Gemini is unavailable, ML prediction still works.
 
 ---
@@ -208,7 +208,8 @@ The model uses 22 engineered features:
 | Time | transaction_hour_bucket, transaction_day_of_week |
 | Payment | payment_method |
 
-**Algorithm:** Random Forest Classifier (scikit-learn)
+**Models:** Logistic Regression · Random Forest · XGBoost  
+**Selected Model:** Random Forest Classifier  
 **Output:** Risk score 0–100 + label (LOW / MEDIUM / HIGH)
 
 ---
