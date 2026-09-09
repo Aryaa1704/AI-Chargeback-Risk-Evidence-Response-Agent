@@ -34,25 +34,20 @@ When a customer raises a **chargeback dispute** (e.g., "I didn't make this payme
 └────────────────────┬────────────────────────────────────┘
                      │ REST API calls
 ┌────────────────────▼────────────────────────────────────┐
-│                  BACKEND (FastAPI + Python)               │
-│                                                          │
-│  ┌─────────────────┐    ┌──────────────────────────┐    │
-│  │   ML Risk Model  │    │   Gemini Investigation   │    │
-│  │  (Random Forest) │    │       Agent              │    │
-│  │                  │    │  - Pulls DB evidence     │    │
-│  │  Input features  │    │  - Synthesizes report    │    │
-│  │  → Risk Score    │    │  - Never invents facts   │    │
-│  │    (0–100)       │    │                          │    │
-│  └────────┬─────────┘    └────────────┬─────────────┘    │
-│           │                           │                  │
-│           └──────────┬────────────────┘                  │
-│                      │                                   │
-│              ┌───────▼────────┐                          │
-│              │  SQLite DB     │                          │
-│              │  (Transactions,│                          │
-│              │   Customers,   │                          │
-│              │   Disputes)    │                          │
-│              └────────────────┘                          │
+│                  BACKEND (FastAPI + Python)             │
+│                                                         │
+│              ┌──────────────────────────┐               │
+│                    ML Risk Model
+                 (Selected: Random Forest)
+                  22 engineered features
+                  → Risk Score (0–100)
+│              └────────────┬─────────────┘                │
+│                   ┌───────▼────────┐                     │
+│                   │  SQLite DB     │                     │
+│                   │  (Transactions,│                     │
+│                   │   Customers,   │                     │
+│                   │   Disputes)    │                     │
+│                   └────────────────┘                     │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -64,29 +59,6 @@ They work independently. If Gemini is unavailable, ML prediction still works.
 
 ---
 
-## 📊 Data Source — Where Does the ML Model's Data Come From?
-
-This is **100% synthetic/demo data** — no real Razorpay transactions, no real customer PII.
-
-### Why synthetic?
-Real chargeback data is proprietary and contains sensitive PII. Synthetic data lets us demonstrate the system's logic safely.
-
-### How is the data generated?
-
-The file `backend/app/seed/generate_synthetic.py` generates realistic transaction records using **domain-consistent rules** that mirror real-world chargeback patterns
-
-
-| Rule Applied to Transaction | Effect on Risk Label |
-|---|---|
-| Amount > ₹50,000 | ↑ Higher risk |
-| `transaction_status = failed` | ↑ Higher risk |
-| `is_cross_border = true` (foreign merchant) | ↑ Higher risk |
-| `customer_dispute_history > 2` | ↑ Higher risk |
-| Low amount + completed + domestic merchant | ↓ Lower risk |
-
-These rules generate the `is_high_risk` label → which the ML model then learns from.
-
-### Data flow (end to end):
 
 ### 🧠 ML Training Pipeline
 
@@ -217,33 +189,8 @@ Gemini is not required for ML prediction, so risk scoring remains available
 even if the AI investigation service is unavailable.
 
 ```
-generate_synthetic.py
-        ↓
-  Creates ~1000 synthetic transaction records
-        ↓
-  Stored in SQLite DB (chargeback_risk.db)
-        ↓
-  app.ml.train_model reads DB → extracts features → trains Random Forest
-        ↓
-  Model saved to: artifacts/models/chargeback-risk-v1.joblib
-        ↓
-  API endpoint /api/v1/risk/predict → uses saved model → returns risk score
-        ↓
-  Gemini agent reads same DB → builds evidence report
-        ↓
-  Frontend shows analyst: Risk Score + Evidence Report
+
 ```
-
-### Features Used by the ML Model
-
-| Feature | What It Represents |
-|---|---|
-| `transaction_amount` | Value of the disputed payment (₹) |
-| `transaction_status` | failed / pending / completed |
-| `is_cross_border` | Was the merchant in a foreign country? |
-| `customer_dispute_history` | How many prior disputes has this customer raised? |
-| `payment_method` | Card / UPI / Netbanking |
-| `transaction_age_days` | Days since the transaction happened |
 
 ### Features Used by the ML Model
 
